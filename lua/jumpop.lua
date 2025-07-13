@@ -1,7 +1,8 @@
 local M = {}
 local config = {
     max_offset = 10,
-    direction = "both"
+    direction = "both",
+    jump_first_on_line = true
 }
 
 function M.setup(user_config)
@@ -22,8 +23,6 @@ function M.ci_nearest_multiline()
 
     if found then
         vim.api.nvim_feedkeys("ci" .. char, "n", false)
-    else
-        vim.notify("Character '" .. char .. "' not found nearby.", vim.log.levels.WARN)
     end
 end
 
@@ -33,9 +32,17 @@ function M.find_nearest_char(target_char)
     local col_start = vim.fn.col(".")
     local current_text = vim.fn.getline(current_line)
 
-    local col = string.find(current_text:sub(col_start), target_char, 1, true)
-    if col then
-        vim.api.nvim_win_set_cursor(0, { current_line, col_start + col - 2 })
+    local first_occurence_for_line = string.find(current_text:sub(col_start), target_char, 1, true)
+    if first_occurence_for_line then
+        vim.api.nvim_win_set_cursor(0, { current_line, col_start + first_occurence_for_line - 2 })
+
+        if config.jump_first_on_line then
+            local second_occurence_for_line = string.find(current_text:sub(first_occurence_for_line), target_char, 1, true)
+            if (second_occurence_for_line) then
+                vim.api.nvim_win_set_cursor(0, { current_line, col_start + second_occurence_for_line - 2 })
+            end
+        end
+
         return true
     end
 
