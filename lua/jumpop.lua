@@ -1,5 +1,8 @@
 local M = {}
-local config = { max_offset = 10 }
+local config = {
+    max_offset = 10,
+    direction = "both"
+}
 
 function M.setup(user_config)
     config = vim.tbl_extend("force", config, user_config or {})
@@ -29,6 +32,7 @@ function M.find_nearest_char(target_char)
     local total_lines = vim.fn.line("$")
     local col_start = vim.fn.col(".")
     local current_text = vim.fn.getline(current_line)
+
     local col = string.find(current_text:sub(col_start), target_char, 1, true)
     if col then
         vim.api.nvim_win_set_cursor(0, { current_line, col_start + col - 2 })
@@ -36,17 +40,31 @@ function M.find_nearest_char(target_char)
     end
 
     for offset = 1, config.max_offset do
-        for _, lnum in ipairs({ current_line + offset, current_line - offset }) do
-            if lnum >= 1 and lnum <= total_lines then
-                local line = vim.fn.getline(lnum)
+        if config.direction == "down" or config.direction == "both" then
+            local lnum_down = current_line + offset
+            if lnum_down <= total_lines then
+                local line = vim.fn.getline(lnum_down)
                 local char_col = string.find(line, target_char, 1, true)
                 if char_col then
-                    vim.api.nvim_win_set_cursor(0, { lnum, char_col - 1 })
+                    vim.api.nvim_win_set_cursor(0, { lnum_down, char_col - 1 })
+                    return true
+                end
+            end
+        end
+
+        if config.direction == "up" or config.direction == "both" then
+            local lnum_up = current_line - offset
+            if lnum_up >= 1 then
+                local line = vim.fn.getline(lnum_up)
+                local char_col = string.find(line, target_char, 1, true)
+                if char_col then
+                    vim.api.nvim_win_set_cursor(0, { lnum_up, char_col - 1 })
                     return true
                 end
             end
         end
     end
+
 
     return false
 end
