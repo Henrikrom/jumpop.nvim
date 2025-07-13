@@ -34,17 +34,22 @@ function M.find_nearest_char(target_char)
 
     local first_occurence_for_line = string.find(current_text:sub(col_start), target_char, 1, true)
     if first_occurence_for_line then
-        vim.api.nvim_win_set_cursor(0, { current_line, col_start + first_occurence_for_line - 2 })
+        local first_col = col_start + first_occurence_for_line - 2
+        vim.api.nvim_win_set_cursor(0, { current_line, first_col })
 
         if config.jump_first_on_line then
-            local second_occurence_for_line = string.find(current_text:sub(first_occurence_for_line), target_char, 1, true)
-            if (second_occurence_for_line) then
-                vim.api.nvim_win_set_cursor(0, { current_line, col_start + second_occurence_for_line - 2 })
+            local search_start = col_start + first_occurence_for_line
+            local second_relative = string.find(current_text:sub(search_start), target_char, 1, true)
+
+            if second_relative then
+                local second_col = search_start + second_relative - 2
+                vim.api.nvim_win_set_cursor(0, { current_line, second_col })
             end
         end
 
         return true
     end
+
 
     for offset = 1, config.max_offset do
         if config.direction == "down" or config.direction == "both" then
