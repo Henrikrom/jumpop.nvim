@@ -1,4 +1,5 @@
 local M = {}
+
 local config = {
     max_offset = 10,
     direction = "both",
@@ -68,14 +69,14 @@ function M.find_nearest_char(target_char)
 
     local block_start_col, block_end_col = find_block(current_text, col_start, target_char)
     if block_start_col then
-        local first_col = col_start + block_start_col - 2
-        vim.api.nvim_win_set_cursor(0, { current_line, first_col })
+        local new_cursor_pos = col_start + block_end_col - 2
+        vim.api.nvim_win_set_cursor(0, { current_line, new_cursor_pos})
 
         if config.jump_first_on_line then
-            local second_block, _ = find_block(current_text, block_end_col + 1, target_char)
+            local second_block, _ = find_block(current_text, vim.fn.col(".") + 1, target_char)
             if second_block then
-                local second_col = block_end_col + second_block - 1
-                vim.api.nvim_win_set_cursor(0, { current_line, second_col })
+                new_cursor_pos = new_cursor_pos + second_block
+                vim.api.nvim_win_set_cursor(0, { current_line, new_cursor_pos })
             end
         end
 
@@ -119,6 +120,7 @@ return M
 -- Test Text:
 -- test "test" test "test"
 -- test 'test' test 'test'
+-- if config.direction == "up" or config.direction == "both" then
 -- test "
 -- test "test" test "
 -- test {test} test {test}
